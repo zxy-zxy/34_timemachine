@@ -9,10 +9,8 @@ class Timer{
   // IE does not support new style classes yet
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
   constructor(timeout_in_secs){
-    this.isRunning = false
-    this.timestampOnStart = null
     this.initial_timeout_in_secs = timeout_in_secs
-    this.timeout_in_secs = this.initial_timeout_in_secs
+    this.reset()
   }
   getTimestampInSecs(){
     var timestampInMilliseconds = new Date().getTime()
@@ -30,6 +28,11 @@ class Timer{
     this.timeout_in_secs = this.calculateSecsLeft()
     this.timestampOnStart = null
     this.isRunning = false
+  }
+  reset(timeout_in_secs){
+    this.isRunning = false
+    this.timestampOnStart = null
+    this.timeout_in_secs = this.initial_timeout_in_secs
   }
   calculateSecsLeft(){
     if (!this.isRunning)
