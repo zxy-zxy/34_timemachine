@@ -1,40 +1,50 @@
-var TIMEOUT_IN_SECS = 3 * 60
-var TEMPLATE = '<h1><span class="js-timer-minutes">00</span>:<span class="js-timer-seconds">00</span></h1>'
+var TIMEOUT_FOR_POPUP = 2
+var TIMEOUT_IN_SECS = 5
 
-function padZero(number){
+var TEMPLATE = '<div style="position: fixed; top: 0; width: 100%; background-color: #EFFBFB; z-index: 1"><h1>' +
+  '<span class="js-timer-minutes">00</span>:' +
+  '<span class="js-timer-seconds">00</span>' +
+  '</h1></div>'
+
+function padZero(number) {
   return ("00" + String(number)).slice(-2);
 }
 
-class Timer{
+class Timer {
   // IE does not support new style classes yet
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
-  constructor(timeout_in_secs){
+  constructor(timeout_in_secs) {
     this.initial_timeout_in_secs = timeout_in_secs
     this.reset()
   }
-  getTimestampInSecs(){
+
+  getTimestampInSecs() {
     var timestampInMilliseconds = new Date().getTime()
-    return Math.round(timestampInMilliseconds/1000)
+    return Math.round(timestampInMilliseconds / 1000)
   }
-  start(){
+
+  start() {
     if (this.isRunning)
       return
     this.timestampOnStart = this.getTimestampInSecs()
     this.isRunning = true
   }
-  stop(){
+
+  stop() {
     if (!this.isRunning)
       return
     this.timeout_in_secs = this.calculateSecsLeft()
     this.timestampOnStart = null
     this.isRunning = false
   }
-  reset(timeout_in_secs){
+
+  reset(timeout_in_secs) {
     this.isRunning = false
     this.timestampOnStart = null
     this.timeout_in_secs = this.initial_timeout_in_secs
   }
-  calculateSecsLeft(){
+
+  calculateSecsLeft() {
     if (!this.isRunning)
       return this.timeout_in_secs
     var currentTimestamp = this.getTimestampInSecs()
@@ -43,13 +53,14 @@ class Timer{
   }
 }
 
-class TimerWidget{
+class TimerWidget {
   // IE does not support new style classes yet
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
-  construct(){
+  construct() {
     this.timerContainer = this.minutes_element = this.seconds_element = null
   }
-  mount(rootTag){
+
+  mount(rootTag) {
     if (this.timerContainer)
       this.unmount()
 
@@ -64,14 +75,17 @@ class TimerWidget{
     this.minutes_element = this.timerContainer.getElementsByClassName('js-timer-minutes')[0]
     this.seconds_element = this.timerContainer.getElementsByClassName('js-timer-seconds')[0]
   }
-  update(secsLeft){
+
+  update(secsLeft) {
     var minutes = Math.floor(secsLeft / 60);
     var seconds = secsLeft - minutes * 60;
 
     this.minutes_element.innerHTML = padZero(minutes)
     this.seconds_element.innerHTML = padZero(seconds)
+
   }
-  unmount(){
+
+  unmount() {
     if (!this.timerContainer)
       return
     this.timerContainer.remove()
@@ -80,20 +94,50 @@ class TimerWidget{
 }
 
 
-function main(){
+function main() {
 
   var timer = new Timer(TIMEOUT_IN_SECS)
   var timerWiget = new TimerWidget()
   var intervalId = null
 
+  var intervalIdForPopup = null
+  var timerForPopup = new Timer(TIMEOUT_FOR_POPUP)
+  var popupCounter = 0
+
   timerWiget.mount(document.body)
 
-  function handleIntervalTick(){
-    var secsLeft = timer.calculateSecsLeft()
-    timerWiget.update(secsLeft)
+  function handleIntervalTickForPopup() {
+    var secsLeft = timerForPopup.calculateSecsLeft()
+    if (secsLeft === 0) {
+      popupCounter = popupCounter + 1
+      window.alert('You could not find it on the ' + popupCounter + ' try.')
+      timerForPopup.reset()
+      timerForPopup.start()
+    }
   }
 
-  function handleVisibilityChange(){
+  function handleVisibilityChangeForPopup() {
+    if (document.hidden) {
+      timerForPopup.stop()
+      clearInterval(intervalIdForPopup)
+      intervalIdForPopup = null
+    } else {
+      timerForPopup.start()
+      intervalIdForPopup = intervalIdForPopup || setInterval(handleIntervalTickForPopup, 300)
+    }
+  }
+
+  function handleIntervalTick() {
+    var secsLeft = timer.calculateSecsLeft()
+    timerWiget.update(secsLeft)
+    if (secsLeft === 0) {
+      clearInterval(intervalId)
+      document.addEventListener("visibilitychange", handleVisibilityChangeForPopup, false)
+      handleVisibilityChangeForPopup()
+    }
+  }
+
+  function handleVisibilityChange() {
     if (document.hidden) {
       timer.stop()
       clearInterval(intervalId)
@@ -109,9 +153,5 @@ function main(){
   handleVisibilityChange()
 }
 
-if (document.readyState === "complete" || document.readyState === "loaded") {
-  main();
-} else {
-  // initialize timer when page ready for presentation
-  window.addEventListener('DOMContentLoaded', main);
-}
+// initialize timer when page ready for presentation
+window.addEventListener('load', main)
