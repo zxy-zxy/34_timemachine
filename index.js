@@ -110,4 +110,4 @@ function main(){
 }
 
 // initialize timer when page ready for presentation
-window.addEventListener('load', main)
+window.addEventListener('DOMContentLoaded', main)
