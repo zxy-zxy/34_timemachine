@@ -1,5 +1,5 @@
 var TIMEOUT_FOR_POPUP = 30
-var TIMEOUT_IN_SECS = 60*30
+var TIMEOUT_IN_SECS = 60*3
 
 var TEMPLATE = '<div style="position: fixed; top: 0; width: 100%; background-color: #EFFBFB; z-index: 1"><h1>' +
   '<span class="js-timer-minutes">00</span>:' +
