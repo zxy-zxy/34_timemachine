@@ -109,5 +109,9 @@ function main(){
   handleVisibilityChange()
 }
 
-// initialize timer when page ready for presentation
-window.addEventListener('DOMContentLoaded', main)
+if (document.readyState === "complete" || document.readyState === "loaded") {
+  main();
+} else {
+  // initialize timer when page ready for presentation
+  window.addEventListener('DOMContentLoaded', main);
+}
